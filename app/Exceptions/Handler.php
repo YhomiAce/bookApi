@@ -4,6 +4,10 @@ namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
+use App\Exceptions\RouteNotFoundException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Response;
+use Exception;
 
 class Handler extends ExceptionHandler
 {
@@ -37,5 +41,21 @@ class Handler extends ExceptionHandler
         $this->reportable(function (Throwable $e) {
             //
         });
+        $this->renderable(function (RouteNotFoundException $e, $request) {
+            return Response::json(["message"=> "Server Error"],500);
+        });
+        $this->renderable(function (NotFoundHttpException $e, $request) {
+            if ($request->is('api/*')) {
+                return Response::json([
+                    'error' => 'Book not Found.'
+                ], 404);
+            }
+        });
+
+        $this->renderable(function (\Illuminate\Database\QueryException $e, $request) {
+            return Response::json(['error'=>'Server Error'],500);
+        });
+
+
     }
 }

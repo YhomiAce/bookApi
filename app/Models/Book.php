@@ -21,4 +21,6 @@ class Book extends Model
     protected $casts = [
         'authors' => 'array'
     ];
+
+    protected $hidden = ["created_at", "updated_at"];
 }

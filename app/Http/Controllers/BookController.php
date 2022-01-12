@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Http\Requests\BookRequest;
 use App\Models\Book;
 use Validator;
+use App\Http\Resources\BookResource;
 
 class BookController extends Controller
 {
@@ -15,10 +17,10 @@ class BookController extends Controller
      */
     public function index()
     {
-        $books = Book::all();
+        $books = BookResource::collection(Book::all());
         return response()->json([
-        "status" => "success",
         "status_code"=> 200,
+        "status" => "success",
         "data" => $books
         ], 200);
     }
@@ -28,26 +30,14 @@ class BookController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(BookRequest $request)
     {
-        $input = $request->all();
-        $validator = Validator::make($input, [
-        'name' => 'required',
-        'isbn' => 'required',
-        'authors' => 'required',
-        'country' => 'required',
-        'number_of_pages' => 'required',
-        'publisher' => 'required',
-        'release_date' => 'required|date_format:Y-m-d',
-        ]);
-        if($validator->fails()){
-        return response()->json($validator->errors());
-        }
-        $product = Book::create($input);
+
+        $book = Book::create($request->all());
         return response()->json([
-        "status" => "success",
         "status_code"=> 201,
-        "data" => $product
+        "status" => "success",
+        "data" => new BookResource($book)
         ], 201);
     }
 
@@ -68,9 +58,9 @@ class BookController extends Controller
             ], 404);
         }
         return response()->json([
-        "status" => "success",
         "status_code"=> 200,
-        "data" => $book
+        "status" => "success",
+        "data" => new BookResource($book)
         ], 200);
     }
 
@@ -83,37 +73,13 @@ class BookController extends Controller
      */
     public function update(Request $request, Book $book)
     {
-        $input = $request->all();
-
-        $input = $request->all();
-        $validator = Validator::make($input, [
-        'name' => 'required',
-        'isbn' => 'required',
-        'authors' => 'required',
-        'country' => 'required',
-        'number_of_pages' => 'required',
-        'publisher' => 'required',
-        'release_date' => 'required|date_format:Y-m-d',
-        ]);
-        if($validator->fails()){
-        return response()->json($validator->errors());
-        }
-
-        $book->name = $request->name;
-        $book->isbn = $request->isbn;
-        $book->authors = $request->authors;
-        $book->country = $request->country;
-        $book->number_of_pages = $request->number_of_pages;
-        $book->publisher = $request->publisher;
-        $book->release_date = $request->number_of_pages;
-
-        $book->save();
+        $book->update($request->all());
         $name = $book->name;
         return response()->json([
-        "status" => "success",
         "status_code"=> 200,
+        "status" => "success",
         "message" => "The book, $name was updated successfully.",
-        "data" => $book
+        "data" => new BookResource($book)
         ], 200);
     }
 
@@ -123,13 +89,14 @@ class BookController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Book $book)
     {
-        $book = Book::find($id)->delete();
+        $name = $book->name;
+        $book->delete();
         return response()->json([
-        "status_code"=> 204,
         "status" => "success",
-        "message" => "The book was deleted successfully.",
+        "status_code"=> 204,
+        "message" => "The book, $name was deleted successfully.",
         "data" => []
         ]);
     }
